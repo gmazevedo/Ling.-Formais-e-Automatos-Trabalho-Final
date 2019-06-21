@@ -194,6 +194,39 @@ def incluiEstados(afd):
             if transicao[igual:] not in afd.estados:
                 afd.estados.append(transicao[igual:])
 
+def buscaEstados(afd):
+    triplaTransicoes = []
+    deletar = []
+    for estado in afd.estados:
+        triplaTransicoes = triplaTransicoes + procuraTrans(estado,afd.transicoes)
+
+    listaDestinos = []
+    for transicao in triplaTransicoes:
+        listaDestinos.append(transicao[2])
+
+    print listaDestinos
+
+    for estado in afd.estados:
+        if estado not in listaDestinos:
+            afd.estados.remove(estado)
+
+            for transicao in triplaTransicoes:
+                if transicao[0] == estado:
+                    deletar = deletar + [transicao]
+                    triplaTransicoes.remove(transicao)
+
+            for transicao in triplaTransicoes:
+                listaDestinos.append(transicao[2])
+
+    for transicao in afd.transicoes:
+        virgula = transicao.find(',')
+        if transicao[1:virgula] not in afd.estados:
+            deletar = deletar + [transicao]
+
+    print deletar
+
+
+# print triplaTransicoes
 
 def convertAFN_AFD(afn,afd):
     lista = estadosEq(afn,afd)
@@ -204,3 +237,5 @@ def convertAFN_AFD(afn,afd):
     while (len(afd.q) > 0):
         detAFN(afd)
         incluiEstados(afd)
+
+    buscaEstados(afd)
