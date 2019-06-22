@@ -23,8 +23,8 @@ class AFN():
         self.numFinais = 0
         self.transicoes = []
 
-    def init_estados(self):
-        self.estados = list(range(self.numEstados))
+    #def init_estados(self):
+       # self.estados = list(range(self.numEstados))
 
     def leAFN(self,linhas):
         """Indices da linha 0:
@@ -40,7 +40,7 @@ class AFN():
         self.numFinais = len(linhas[0][3][2:].split(','))
         self.transicoes = linhas[2:]
 
-        return self.estInicial
+        #return self.estInicial
 
 
     def printaAFN(self):
@@ -73,7 +73,7 @@ class AFD():
         print "Estados finais: "+str(self.estFinais)
         print "Numero de estados finais: " + str(self.numFinais)
         print "Transicoes: "+str(self.transicoes)
-        print "Estados temporarios: " + str(self.q)
+        #print "Estados temporarios: " + str(self.q)
 
 
 def estadosEq(afn,afd):
@@ -105,7 +105,12 @@ def estadosEq(afn,afd):
 
                 deletar.append(afn.transicoes[a])
                 deletar.append(afn.transicoes[a+1])
-                #afd.estados.append(afn.transicoes[a][pos5+1] + afn.transicoes[a][pos5+2] + afn.transicoes[a+1][pos6+1] + afn.transicoes[a+1][pos6+2])
+
+                if afn.transicoes[a][pos5:] not in afn.estFinais and  afn.transicoes[a + 1][pos6:] not in afn.estFinais:
+                    pass
+                else:
+                    afd.estFinais = afd.estFinais + [(afn.transicoes[a][pos5:] + afn.transicoes[a + 1][pos6:])]
+
                 afd.q.append([afn.transicoes[a][pos5:],afn.transicoes[a+1][pos6:]])#resultando na concatenacao dos destinos (ex: q5q6)
                 afd.estados = afd.estados + [(afn.transicoes[a][pos5:] + afn.transicoes[a + 1][pos6:])]
                 afd.transicoes = afd.transicoes+ [('('+afn.transicoes[a][1:pos1-1]+','+afn.transicoes[a][pos1:pos3]+')='+(afn.transicoes[a][pos5:] + afn.transicoes[a + 1][pos6:]))]
@@ -116,7 +121,7 @@ def estadosEq(afn,afd):
     return deletar
 
 
-def detAFN(afd):
+def detAFN(afd,afn):
 
     estadosProcessados = []
     novaTrans =[]
@@ -143,16 +148,24 @@ def detAFN(afd):
 
         for chave in dict.keys():
             if len(dict[chave]) > 0:
+                for item in dict[chave]:
+                    if item not in afn.estFinais:
+                        pass
+                    else:
+                        if (''.join(dict[chave])) not in afd.estFinais:
+                            afd.estFinais = afd.estFinais+[''.join(dict[chave])]
+                        break
+
                 if dict[chave] not in afd.q and ''.join(dict[chave]) not in afd.estados:
                     afd.q = afd.q + [dict[chave]]
                 novaTrans.append('('+estadoConc+','+chave+')='+''.join(dict[chave]))
 
-    print estadosProcessados
+   # print estadosProcessados
     for processado in estadosProcessados:
         afd.q.remove(processado)
 
     afd.transicoes = afd.transicoes+novaTrans
-    print "novas transicoes: "+str(novaTrans)
+   # print "novas transicoes: "+str(novaTrans)
 
 # dado um estado e uma lista de transicoes, retorna uma lista de tuplas com todas as transicoes
 # do estado recebido
@@ -204,7 +217,7 @@ def buscaEstados(afd):
     for transicao in triplaTransicoes:
         listaDestinos.append(transicao[2])
 
-    print listaDestinos
+    #print listaDestinos
 
     for estado in afd.estados:
         if estado not in listaDestinos:
@@ -212,30 +225,40 @@ def buscaEstados(afd):
 
             for transicao in triplaTransicoes:
                 if transicao[0] == estado:
-                    deletar = deletar + [transicao]
+                    strTransicao = '('+transicao[0]+','+transicao[1]+')='+transicao[2]
+                    if strTransicao not in deletar:
+                        deletar = deletar + [strTransicao]
                     triplaTransicoes.remove(transicao)
 
+            listaDestinos = []
             for transicao in triplaTransicoes:
                 listaDestinos.append(transicao[2])
 
     for transicao in afd.transicoes:
         virgula = transicao.find(',')
         if transicao[1:virgula] not in afd.estados:
-            deletar = deletar + [transicao]
+            if transicao not in deletar:
+                deletar = deletar + [transicao]
 
-    print deletar
+    return deletar
 
-
-# print triplaTransicoes
+#def estFinal(afd):
 
 def convertAFN_AFD(afn,afd):
     lista = estadosEq(afn,afd)
-    detAFN(afd)
+    detAFN(afd,afn)
     deletaTrans(lista,afd.transicoes)
     incluiEstados(afd)
 
     while (len(afd.q) > 0):
-        detAFN(afd)
+        detAFN(afd,afn)
         incluiEstados(afd)
 
-    buscaEstados(afd)
+    lista = buscaEstados(afd)
+    deletaTrans(lista,afd.transicoes)
+
+    if len(afd.estFinais) == 0:
+        afd.estFinais = afn.estFinais
+
+    afd.numEstados = len(afd.estados)
+    afd.numFinais = len(afd.estFinais)
