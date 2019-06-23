@@ -1,0 +1,14 @@
+AFN=({off,on,q2,q3,q4,q5},{1,2,3,4,5,6,7},{off},{off})
+Prog
+(off,1)=on
+(on,2)=off
+(on,3)=q2
+(q2,2)=off
+(q2,4)=q3
+(q2,5)=q4
+(q3,2)=off
+(q3,5)=q4
+(q4,2)=off
+(q4,6)=q5
+(q5,2)=off
+(q5,7)=on
